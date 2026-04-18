@@ -1,0 +1,18 @@
+services:
+  dante:
+    build: .
+    image: banfen321/dante-proxy:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      SOCKD_PORT:           ${SOCKD_PORT:-1080}
+      SOCKD_USER_NAME:      ${SOCKD_USER_NAME:-proxy}
+      SOCKD_USER_PASSWORD:  ${SOCKD_USER_PASSWORD:-}
+      SOCKD_EXTERNAL_IFACE: ${SOCKD_EXTERNAL_IFACE:-}
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+    security_opt:
+      - no-new-privileges:true
