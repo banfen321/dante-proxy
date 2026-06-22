@@ -12,6 +12,8 @@ if [ -z "${SOCKD_EXTERNAL_IFACE:-}" ]; then
 fi
 
 SOCKD_PORT="${SOCKD_PORT:-1080}"
+SOCKD_BIND_ADDR="${SOCKD_BIND_ADDR:-0.0.0.0}"
+SOCKD_ALLOW_IPS="${SOCKD_ALLOW_IPS:-0.0.0.0/0}"
 SOCKD_USER_NAME="${SOCKD_USER_NAME:-proxy}"
 
 _creds_generated=0
@@ -25,15 +27,18 @@ id "${SOCKD_USER_NAME}" >/dev/null 2>&1 || \
 printf '%s:%s\n' "${SOCKD_USER_NAME}" "${SOCKD_USER_PASSWORD}" | chpasswd
 
 sed \
+    -e "s|SOCKD_BIND_ADDR|${SOCKD_BIND_ADDR}|g" \
     -e "s|SOCKD_PORT|${SOCKD_PORT}|g" \
     -e "s|SOCKD_EXTERNAL_IFACE|${SOCKD_EXTERNAL_IFACE}|g" \
+    -e "s|SOCKD_ALLOW_IPS|${SOCKD_ALLOW_IPS}|g" \
     /etc/sockd.conf.tmpl > /etc/sockd.conf
 
 echo "============================================"
 echo " Dante SOCKS5 Proxy"
 echo "--------------------------------------------"
 echo " Interface : ${SOCKD_EXTERNAL_IFACE}"
-echo " Port      : ${SOCKD_PORT}"
+echo " Bind      : ${SOCKD_BIND_ADDR}:${SOCKD_PORT}"
+echo " Allow IPs : ${SOCKD_ALLOW_IPS}"
 echo " User      : ${SOCKD_USER_NAME}"
 if [ "${_creds_generated}" = "1" ]; then
     echo " Password  : ${SOCKD_USER_PASSWORD}"

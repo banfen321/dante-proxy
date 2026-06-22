@@ -1,7 +1,7 @@
 debug: 0
 logoutput: stderr
 
-internal: 0.0.0.0 port = SOCKD_PORT
+internal: SOCKD_BIND_ADDR port = SOCKD_PORT
 external: SOCKD_EXTERNAL_IFACE
 
 socksmethod: username
@@ -11,7 +11,7 @@ user.privileged: root
 user.unprivileged: nobody
 
 client pass {
-    from: 0.0.0.0/0 port 1-65535 to: 0.0.0.0/0
+    from: SOCKD_ALLOW_IPS port 1-65535 to: 0.0.0.0/0
     log: connect disconnect error
 }
 
