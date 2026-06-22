@@ -71,6 +71,8 @@ Copy `.env.example` to `.env`. All variables are optional.
 
 > Requires `git clone` — the stunnel image is built locally from `stunnel/`.
 
+### Server
+
 ```bash
 # .env
 SOCKD_BIND_ADDR=127.0.0.1
@@ -85,20 +87,50 @@ docker compose --profile tls up -d
 A self-signed certificate is generated on first start and stored in a Docker volume.
 To use your own certificate, mount `server.pem` and `server.key` at `/etc/stunnel/certs/`.
 
-**Client setup** (stunnel on your machine):
+### Client
+
+The client must also run stunnel locally — it receives the plain SOCKS5 connection
+from your app and wraps it in TLS before sending to the server.
+
+```
+Your app → localhost:1080 (stunnel client) ──TLS──► VPS:1080 (stunnel server) → Dante
+```
+
+**Install stunnel:**
+
+| OS | Command |
+|---|---|
+| Ubuntu / Debian | `apt install stunnel4` |
+| macOS | `brew install stunnel` |
+| Windows | [stunnel.net/downloads](https://www.stunnel.org/downloads.html) — installer |
+| Docker | `docker run --rm -v ./client.conf:/etc/stunnel/stunnel.conf stunnel/stunnel` |
+
+**Create client config:**
 
 ```ini
-# /etc/stunnel/client.conf
+# client.conf
 [socks5-tls]
 client  = yes
 accept  = 127.0.0.1:1080
 connect = YOUR_HOST:1080
+verify  = 0              ; self-signed cert — skip verification
+                         ; to verify: set verify=2 and add CAfile=server.pem
 ```
 
+To verify the server certificate (recommended), copy `/etc/stunnel/certs/server.pem`
+from the server and add `CAfile = /path/to/server.pem` + `verify = 2`.
+
+**Run:**
+
 ```bash
-stunnel /etc/stunnel/client.conf
+stunnel client.conf
+
+# now point your app at localhost:1080
 curl --socks5-hostname user:password@127.0.0.1:1080 https://ifconfig.me
+export ALL_PROXY=socks5h://user:password@127.0.0.1:1080
 ```
+
+Firefox: Settings → Network → SOCKS5 → `127.0.0.1` : `1080`.
 
 ## IP allowlist
 
